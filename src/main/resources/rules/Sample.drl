@@ -1,0 +1,462 @@
+package com.sample
+ 
+import com.sample.DroolsTest.Message;
+global PrinterInterface inter;
+
+
+declare GuiPosition
+	question : String 
+	answer : String
+	previousAnswer : String
+	previousQuestion : String
+	
+declare Result 
+	decision : String
+ 
+rule "StartingPoint"
+    when
+        
+    then
+       String answers[] = {"Ultra High Print Quality", "Moddability", "Ease of Use"
+       ,"Big Build Volume", "Portability" };
+         int res = askQuestion(inter,
+        	"The thing I want the most is...", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("StartingPoint");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+//START ULTRA HIGH QUAL
+
+rule "WantAffordability"
+    when
+    	GuiPosition(question == "StartingPoint" && answer == "Ultra High Print Quality" || answer == "Moddability" || answer == "Ease of Use"
+    		|| "Big Build Volume")
+    then
+       String answers[] = {"Yes", "No"};
+         int res = askQuestion(inter,
+        	"Do you also need affordability", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("WantAffordability");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "DualExtrusion"
+    when
+    	GuiPosition((question == "WantAffordability" && answer == "Yes" && previousanswer == "Ultra High Quality") 
+    		|| question == "OpenSource" && answer == "Yes"
+    			|| question == "OpenSource" && answer == "No/I Don't care"
+    				|| question == "HavingCloneMakerBot" && answer == "No way!" )
+    then
+       String answers[] = {"Yes", "No"};
+         int res = askQuestion(inter, "Do you need dual extrusion?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("DualExtrusion");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "Ultimaker2Result"
+    when
+    	GuiPosition(question == "WantAffordability" && answer == "No")
+    then
+       	Result result = new Result();
+		result.setPrinter("Ultimaker2");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+
+rule "DeezmakerBukobotv2DuoResult"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "Yes")
+    then
+       	Result result = new Result();
+		result.setPrinter("Deezmaker Bukobot v2 Duo");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "DeezmakerBukobotv2Result"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "No")
+    then
+       	Result result = new Result();
+		result.setPrinter("Deezmaker Bukobot v2");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+// KONIEC DRZEWA ULTRA HIGH QUAL 
+
+//DRZEWO MODDABILITY
+
+rule "DIYOrAssembled"
+    when
+    	GuiPosition(question == "WantAffordability" && (answer == "Yes" || answer == "No)")
+    then
+       String answers[] = {"Kit", "Assembled"};
+         int res = askQuestion(inter, "DIY kit or assembled machine?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("DIYOrAssembled");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "Robo3DResult"
+    when
+    	GuiPosition(question == "DIYOrAssembled" && answer == "Assembled" && previousAnswer == "Yes")
+    then
+       	Result result = new Result();
+		result.setPrinter("Robo3D");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "LulzBotKITTAZResult"
+    when
+    	GuiPosition(question == "DIYOrAssembled" && answer == "Kit" && previousAnswer == "No")
+    then
+       	Result result = new Result();
+		result.setPrinter("LulzBot KITTAZ");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "LulzBotTAZ4Result"
+    when
+    	GuiPosition(question == "DIYOrAssembled" && answer == "Assembled" && previousAnswer == "No")
+    then
+       	Result result = new Result();
+		result.setPrinter("LulzBot TAZ4");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "BuildVolumeOrSpeeds"
+    when
+    	GuiPosition(question == "DIYOrAssembled" && answer == "Kit" && previousanswer == "Yes")
+    then
+       String answers[] = {"Speed", "Build Volume"};
+         int res = askQuestion(inter, "Would you rather have more build volume or faster printing speeds?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("BuildVolumeOrSpeeds");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "VellemanK8200Result"
+    when
+    	GuiPosition(question == "BuildVolumeOrSpeeds" && answer == "Speed")
+    then
+       	Result result = new Result();
+		result.setPrinter("Velleman K8200");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "LittleMoreOrLotMoreBuildVolume"
+    when
+    	GuiPosition(question == "BuildVolumeOrSpeeds" && answer == "Build volume")
+    then
+       	 String answers[] = {"A little more", "A LOT more"};
+         int res = askQuestion(inter, "A little bit more build volume or a LOT more build volume?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("LittleMoreOrLotMoreBuildVolume");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "RigidBotBigResult"
+    when
+    	GuiPosition(question == "LittleMoreOrLotMoreBuildVolume" && answer == "A LOT more")
+    then
+       	Result result = new Result();
+		result.setPrinter("RigidBot Big");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "BetterCompanyOrCommunitySupport"
+    when
+    	GuiPosition(question == "LittleMoreOrLotMoreBuildVolume" && answer == "A little more")
+    then
+       	 String answers[] = {"Community", "Company"};
+         int res = askQuestion(inter, "Would you rather have better company support or better commmunity support?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("BetterCompanyOrCommunitySupport");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "RigidBotRegularResult"
+    when
+    	GuiPosition(question == "BetterCompanyOrCommunitySupport" && answer == "Community")
+    then
+       	Result result = new Result();
+		result.setPrinter("RigidBot Regular");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "PrintBotMetalPlusResult"
+    when
+    	GuiPosition(question == "BetterCompanyOrCommunitySupport" && answer == "Company")
+    then
+       	Result result = new Result();
+		result.setPrinter("PrintBot Metal Plus");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+//KONIEC DRZEWA MODDABILITY
+
+rule "BuildVolumeOrEaseOfUSe"
+    when
+    	GuiPosition(question == "WantAffordability" && answer == "Yes" && previousanswer == "Ease of Use")
+    then
+       String answers[] = {"Ease of Use", "Build Volume"};
+         int res = askQuestion(inter, "Would you rather have more build volume or more ease of use?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("BuildVolumeOrSpeeds");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "DremelIdeabuilderResult"
+    when
+    	GuiPosition(question == "BuildVolumeOrEaseOfUSe" && answer == "Ease of Use")
+    then
+       	Result result = new Result();
+		result.setPrinter("Dremel Ideabuilder");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "OpenSource"
+    when
+    	GuiPosition(question == "BuildVolumeOrSpeeds" && answer == "Build volume")
+    then
+       String answers[] = {"Yes", "No/I Don't care"};
+         int res = askQuestion(inter, "Do you want an open source printer?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("OpenSource");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "BigVolume"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousAnswer == "Yes" 
+    		|| question == "TripleExtrusion" && answer == "Eh.")
+    then
+       String answers[] = {"Yes", "No"};
+         int res = askQuestion(inter, "Do you need a big build volume?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("BigVolume");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "SolidoodleWorkBenchApprenticeResult"
+    when
+    	GuiPosition(question == "BigVolume" && answer == "No" && previousAnswer == "Yes")
+    then
+       	Result result = new Result();
+		result.setPrinter("Solidoodle WorkBench Apprentice");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "SolidoodleWorkBenchResult"
+    when
+    	GuiPosition(question == "BigVolume" && answer == "Yes")
+    then
+       	Result result = new Result();
+		result.setPrinter("Solidoodle WorkBench");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "Solidoodle4Result"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "No" && previousAnswer == "Yes")
+    then
+       	Result result = new Result();
+		result.setPrinter("Solidoodle 4");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "BuiltIn3DScanner"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "No" && previousAnswer == "No/I Don't care")
+    then
+       String answers[] = {"Cool!", "Eh."};
+         int res = askQuestion(inter, "How does a built in 3D scanner sound?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("BuiltIn3DScanner");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "XYZPrintingDaVinci1.0A/OResult"
+    when
+    	GuiPosition(question == "BuiltIn3DScanner" && answer == "Cool!")
+    then
+       	Result result = new Result();
+		result.setPrinter("XYZPrinting DaVinci 1.0 A/O");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "XYZPrintingDaVinci1.0Result"
+    when
+    	GuiPosition(question == "BuiltIn3DScanner" && answer == "Eh.")
+    then
+       	Result result = new Result();
+		result.setPrinter("XYZPrinting DaVinci 1.0");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "XYZPrintingDaVinci2.0Result"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousAnswer == "No/I Don't care" )
+    then
+       	Result result = new Result();
+		result.setPrinter("XYZPrinting DaVinci 2.0");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "OpposedToHavingMakerBot"
+    when
+    	GuiPosition(question == "WantAffordability" && answer == "No" && previousAnswer == "Ease of Use")
+    then
+       String answers[] = {"Yes", "No"};
+         int res = askQuestion(inter, "Are you opposed to the idea of having a MakerBot?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("OpposedToHavingMakerBot");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "MakerBotReplicator2Result"
+    when
+    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "No")
+    then
+       	Result result = new Result();
+		result.setPrinter("MakerBot Replicator 2");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "HavingCloneMakerBot"
+    when
+    	GuiPosition(question == "HavingMakerBot" && answer == "Yes")
+    then
+       String answers[] = {"That's fine!", "No way!"};
+         int res = askQuestion(inter, "How about MakerBot clone?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("HavingCloneMakerBot");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "FlashForgeCreatorResult"
+    when
+    	GuiPosition(question == "HavingCloneMakerBot" && answer == "That's fine!")
+    then
+       	Result result = new Result();
+		result.setPrinter("FlashForge Creator");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "TripleExtrusion"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousAnswer == "No way!")
+    then
+       String answers[] = {"Cool!", "Eh."};
+         int res = askQuestion(inter, "How does a triple extrusion sound?", answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("TripleExtrusion");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "3DSystemsCubeProTrioResult"
+    when
+    	GuiPosition(question == "TripleExtrusion" && answer == "Cool!")
+    then
+       	Result result = new Result();
+		result.setPrinter("3D Systems CubePro Trio");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "LeapFrogCreatorXLResult"
+    when
+    	GuiPosition(question == "BigVolume" && answer == "Yes" && previousAnswer == "Eh.")
+    then
+       	Result result = new Result();
+		result.setPrinter("LeapFrog Creator XL");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "LeapFrogCreatorHSResult"
+    when
+    	GuiPosition(question == "BigVolume" && answer == "No" && previousAnswer == "Eh.")
+    then
+       	Result result = new Result();
+		result.setPrinter("LeapFrog Creator HS");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "MakeYourPick"
+    when
+    	GuiPosition(question == "DualExtrusion" && answer == "No" && previousAnswer == "No way!")
+    then
+       String answers[] = {"SeeMeCNC Orion Delta", "AirWolf HDX", "Leapfrog Creatr"};
+         int res = askQuestion(inter, "Make your pick. These three have different build volume and are priced respectively",
+         	 answers);
+        GuiPosition gui = new GuiPosition();
+        gui.setQ("MakeYourPick");
+        gui.setA( answers[res] );
+        insert(gui);
+end
+
+rule "SeeMeCNCOrionDeltaResult"
+    when
+    	GuiPosition(question == "MakeYourPick" && answer == "SeeMeCNC Orion Delta")
+    then
+       	Result result = new Result();
+		result.setPrinter("SeeMeCNC Orion Delta");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "AirWolfHDXResult"
+    when
+    	GuiPosition(question == "MakeYourPick" && answer == "AirWolf HDX")
+    then
+       	Result result = new Result();
+		result.setPrinter("AirWolf HDX");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
+
+rule "LeapfrogCreatrResult"
+    when
+    	GuiPosition(question == "MakeYourPick" && answer == "Leapfrog Creatr")
+    then
+       	Result result = new Result();
+		result.setPrinter("Leapfrog Creatr");
+		insert(result);
+		pushResult(inter,result.getPrinter());
+end
