@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.pixelsapphire'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.drools:drools-core:7.30.0.Final'
+    implementation 'org.drools:drools-compiler:7.30.0.Final'
+    implementation 'org.kie.soup:kie-soup-maven-support:7.30.0.Final'
+    implementation 'org.slf4j:slf4j-api:2.0.0'
+    implementation 'org.slf4j:slf4j-simple:2.0.0'
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
