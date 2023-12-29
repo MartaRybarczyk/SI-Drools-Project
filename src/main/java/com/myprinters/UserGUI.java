@@ -22,7 +22,7 @@ public class UserGUI extends JFrame implements PrinterInterface {
     private JPanel answers;
     private int answerId = -1;
 
-    private String previousQuestion, previousAnswer;
+    private String previousQuestion, previousAnswer, firstAnswer;
 
     public UserGUI() {
         setLocationRelativeTo(null);
@@ -45,20 +45,19 @@ public class UserGUI extends JFrame implements PrinterInterface {
 
     @Override
     public int getOption() {
-        if (answerId != -1) log("yeetOption() :: " + answerId);
         return answerId;
     }
 
     @Override
     public void showQuestion(String question) {
-        log("mlemQuestion(" + question + ")");
-        doStuff(() -> label.setText(question));
+        log("CurrentQuestion(" + question + ")");
+        showData(() -> label.setText(question));
     }
 
     @Override
     public void showOptions(List<String> options) {
-        log("mlemOption(" + String.join(",", options) + ")");
-        doStuff(() -> {
+        log("CurrentAnswers(" + String.join(",", options) + ")");
+        showData(() -> {
             if (!options.isEmpty()) {
                 answers.setLayout(new GridLayout(options.size(), 1));
                 for (int i = 0; i < options.size(); i++) {
@@ -73,11 +72,11 @@ public class UserGUI extends JFrame implements PrinterInterface {
 
     @Override
     public void showDecision(String decision) {
-        log("mlemDecision(" + decision + ")");
-        doStuff(() -> label.setText(decision));
+        log("FinalDecision(" + decision + ")");
+        showData(() -> label.setText(decision));
     }
 
-    private void doStuff(Runnable action) {
+    private void showData(Runnable action) {
         answerId = -1;
         answers.removeAll();
         answers.setLayout(new FlowLayout());
@@ -125,6 +124,16 @@ public class UserGUI extends JFrame implements PrinterInterface {
     @Override
     public String getPreviousAnswer() {
         return previousAnswer;
+    }
+
+    @Override
+    public void setFirstAnswer(String answer) {
+        firstAnswer = answer;
+    }
+
+    @Override
+    public String getFirstAnswer() {
+        return firstAnswer;
     }
 
 }

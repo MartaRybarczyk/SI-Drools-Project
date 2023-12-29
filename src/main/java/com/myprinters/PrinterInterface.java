@@ -20,5 +20,9 @@ public interface PrinterInterface {
 
     String getPreviousAnswer();
 
+    void setFirstAnswer(String answer);
+
+    String getFirstAnswer();
+
     void log(String message);
 }
