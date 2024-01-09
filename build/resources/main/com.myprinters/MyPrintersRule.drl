@@ -2,7 +2,8 @@
 package com.myprinters
 
 import com.myprinters.PrinterInterface;
-import java.util.List;
+import java.util.List
+import java.util.Arrays;
 
 global PrinterInterface printerface;
 
@@ -11,13 +12,14 @@ declare GuiPosition
 	answer : String
 	previousQuestion : String
 	previousAnswer : String
+	firstAnswer: String
 end
 
 declare Result 
 	decision : String
 end
 
-function String askQuestion(PrinterInterface printerface, String question, List options) {
+function String askQuestion(PrinterInterface printerface, String question, String[] options) {
 	printerface.showQuestion(question);
 	printerface.showOptions(options);
 	int option = printerface.getOption();
@@ -25,7 +27,7 @@ function String askQuestion(PrinterInterface printerface, String question, List 
 	    option = printerface.getOption();
 	    Thread.sleep(50);
 	}
-	return options.get(option).toString();
+	return options[option].toString();
 }
 
 function void storePreviousState(GuiPosition gui, PrinterInterface printerface, String question, String newAnswer) {
@@ -40,17 +42,17 @@ rule "StartingPoint"
 
     then
         String[] answers = {"Ultra High Print Quality", "Moddability", "Ease of Use", "Big Build Volume", "Portability"};
-        String answer = askQuestion(printerface, "The thing I want the most is...", List.of(answers));
+        String answer = askQuestion(printerface, "The thing I want the most is...", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface, "StartingPoint", answer);
         gui.setQuestion("StartingPoint");
         gui.setAnswer(answer);
+        printerface.setFirstAnswer(answer);
+        gui.setFirstAnswer(answer);
         printerface.log("inserting: [" + gui.getQuestion() + ", " + gui.getAnswer() + ", " +
                            gui.getPreviousQuestion() + ", " + gui.getPreviousAnswer() + "]");
         insert(gui);
 end
-
-//START ULTRA HIGH QUAL
 
 rule "WantAffordability"
     when
@@ -58,10 +60,11 @@ rule "WantAffordability"
     		|| answer == "Big Build Volume"))
     then
         String[] answers = {"Yes", "No"};
-        String answer = askQuestion(printerface, "Do you also need affordability", List.of(answers));
+        String answer = askQuestion(printerface, "Do you also need affordability", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface, "WantAffordability", answer);
         gui.setQuestion("WantAffordability");
+        gui.setFirstAnswer(printerface.getFirstAnswer());
         gui.setAnswer(answer);
         printerface.log("inserting: [" + gui.getQuestion() + ", " + gui.getAnswer() + ", " +
                            gui.getPreviousQuestion() + ", " + gui.getPreviousAnswer() + "]");
@@ -70,13 +73,13 @@ end
 
 rule "DualExtrusion"
     when
-    	GuiPosition((question == "WantAffordability" && answer == "Yes" && previousAnswer == "Ultra High Quality")
+    	GuiPosition((question == "WantAffordability" && answer == "Yes" && previousAnswer == "Ultra High Print Quality")
     		|| question == "OpenSource" && answer == "Yes"
     			|| question == "OpenSource" && answer == "No/I Don't care"
     				|| question == "HavingCloneMakerBot" && answer == "No way!" )
     then
        String[] answers = {"Yes", "No"};
-       String answer = askQuestion(printerface, "Do you need dual extrusion?", List.of(answers));
+       String answer = askQuestion(printerface, "Do you need dual extrusion?", answers);
        GuiPosition gui = new GuiPosition();
        storePreviousState(gui, printerface,"DualExtrusion", answer);
        gui.setQuestion("DualExtrusion");
@@ -88,7 +91,7 @@ end
 
 rule "Ultimaker2Result"
     when
-    	GuiPosition(question == "WantAffordability" && answer == "No" && previousAnswer == "Ultra High Quality")
+    	GuiPosition(question == "WantAffordability" && answer == "No" && previousAnswer == "Ultra High Print Quality")
     then
        	Result decision = new Result();
 		decision.setDecision("Ultimaker2");
@@ -99,7 +102,7 @@ end
 
 rule "DeezmakerBukobotv2DuoResult"
     when
-    	GuiPosition(question == "DualExtrusion" && answer == "Yes")
+    	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousQuestion == "WantAffordability")
     then
        	Result decision = new Result();
 		decision.setDecision("Deezmaker Bukobot v2 Duo");
@@ -109,17 +112,13 @@ end
 
 rule "DeezmakerBukobotv2Result"
     when
-    	GuiPosition(question == "DualExtrusion" && answer == "No")
+    	GuiPosition(question == "DualExtrusion" && answer == "No" && previousQuestion == "WantAffordability")
     then
        	Result decision = new Result();
 		decision.setDecision("Deezmaker Bukobot v2");
 		printerface.showDecision(decision.getDecision());
 		insert(decision);
 end
-
-// KONIEC DRZEWA ULTRA HIGH QUAL
-
-//DRZEWO MODDABILITY
 
 rule "DIYOrAssembled"
     when
@@ -128,7 +127,7 @@ rule "DIYOrAssembled"
     	    || (question == "BigBuildVolumeOrReallyBig" && answer == "REALLY BIG"))
     then
        String[] answers = {"Kit", "Assembled"};
-       String answer = askQuestion(printerface, "DIY kit or assembled machine?", List.of(answers));
+       String answer = askQuestion(printerface, "DIY kit or assembled machine?", answers);
        GuiPosition gui = new GuiPosition();
        storePreviousState(gui, printerface,"DIYOrAssembled", answer);
        gui.setQuestion("DIYOrAssembled");
@@ -173,7 +172,7 @@ rule "BuildVolumeOrSpeeds"
     	GuiPosition(question == "DIYOrAssembled" && answer == "Kit" && previousAnswer == "Yes")
     then
        String[] answers = {"Speed", "Build Volume"};
-       String answer = askQuestion(printerface, "Would you rather have more build volume or faster printing speeds?", List.of(answers));
+       String answer = askQuestion(printerface, "Would you rather have more build volume or faster printing speeds?", answers);
        GuiPosition gui = new GuiPosition();
        storePreviousState(gui, printerface,"BuildVolumeOrSpeeds", answer);
        gui.setQuestion("BuildVolumeOrSpeeds");
@@ -199,7 +198,7 @@ rule "LittleMoreOrLotMoreBuildVolume"
     	            previousQuestion == "DIYOrAssembled" && previousAnswer == "Kit")
     then
         String[] answers = {"A little more", "A LOT more"};
-        String answer = askQuestion(printerface, "A little bit more build volume or a LOT more build volume?", List.of(answers));
+        String answer = askQuestion(printerface, "A little bit more build volume or a LOT more build volume?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"LittleMoreOrLotMoreBuildVolume", answer);
         gui.setQuestion("LittleMoreOrLotMoreBuildVolume");
@@ -224,7 +223,7 @@ rule "BetterCompanyOrCommunitySupport"
     	GuiPosition(question == "LittleMoreOrLotMoreBuildVolume" && answer == "A little more")
     then
        	String[] answers = {"Community", "Company"};
-        String answer = askQuestion(printerface, "Would you rather have better company support or better commmunity support?", List.of(answers));
+        String answer = askQuestion(printerface, "Would you rather have better company support or better commmunity support?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"BetterCompanyOrCommunitySupport", answer);
         gui.setQuestion("BetterCompanyOrCommunitySupport");
@@ -254,17 +253,15 @@ rule "PrintBotMetalPlusResult"
 		insert(decision);
 end
 
-//KONIEC DRZEWA MODDABILITY
-
-rule "BuildVolumeOrEaseOfUSe"
+rule "BuildVolumeOrEaseOfUse"
     when
     	GuiPosition(question == "WantAffordability" && answer == "Yes" && previousAnswer == "Ease of Use")
     then
         String[] answers = {"Ease of Use", "Build Volume"};
-        String answer = askQuestion(printerface, "Would you rather have more build volume or more ease of use?", List.of(answers));
+        String answer = askQuestion(printerface, "Would you rather have more ease of use or more build volume?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"BuildVolumeOrEaseOfUSe", answer);
-        gui.setQuestion("BuildVolumeOrSpeeds");
+        gui.setQuestion("BuildVolumeOrEaseOfUse");
         gui.setAnswer(answer);
         printerface.log("inserting: [" + gui.getQuestion() + ", " + gui.getAnswer() + ", " +
                            gui.getPreviousQuestion() + ", " + gui.getPreviousAnswer() + "]");
@@ -273,7 +270,7 @@ end
 
 rule "DremelIdeabuilderResult"
     when
-    	GuiPosition(question == "BuildVolumeOrEaseOfUSe" && answer == "Ease of Use")
+    	GuiPosition(question == "BuildVolumeOrEaseOfUse" && answer == "Ease of Use")
     then
        	Result decision = new Result();
 		decision.setDecision("Dremel Ideabuilder");
@@ -283,11 +280,11 @@ end
 
 rule "OpenSource"
     when
-    	GuiPosition(question == "BuildVolumeOrSpeeds" && answer == "Build volume" &&
+    	GuiPosition(question == "BuildVolumeOrEaseOfUse" && answer == "Build Volume" &&
     	     previousQuestion == "WantAffordability")
     then
         String[] answers = {"Yes", "No/I Don't care"};
-        String answer = askQuestion(printerface, "Do you want an open source printer?", List.of(answers));
+        String answer = askQuestion(printerface, "Do you want an open source printer?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"OpenSource", answer);
         gui.setQuestion("OpenSource");
@@ -299,11 +296,11 @@ end
 
 rule "BigVolume"
     when
-    	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousAnswer == "Yes"
+    	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousQuestion == "OpenSource" && previousAnswer == "Yes"
     		|| question == "TripleExtrusion" && answer == "Eh.")
     then
         String[] answers = {"Yes", "No"};
-        String answer = askQuestion(printerface, "Do you need a big build volume?", List.of(answers));
+        String answer = askQuestion(printerface, "Do you need a big build volume?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"BigVolume", answer);
         gui.setQuestion("BigVolume");
@@ -335,7 +332,7 @@ end
 
 rule "Solidoodle4Result"
     when
-    	GuiPosition(question == "DualExtrusion" && answer == "No" && previousAnswer == "Yes")
+    	GuiPosition(question == "DualExtrusion" && answer == "No" && previousQuestion == "OpenSource")
     then
        	Result decision = new Result();
 		decision.setDecision("Solidoodle 4");
@@ -348,7 +345,7 @@ rule "BuiltIn3DScanner"
     	GuiPosition(question == "DualExtrusion" && answer == "No" && previousAnswer == "No/I Don't care")
     then
         String[] answers = {"Cool!", "Eh."};
-        String answer = askQuestion(printerface, "How does a built in 3D scanner sound?", List.of(answers));
+        String answer = askQuestion(printerface, "How does a built in 3D scanner sound?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"BuiltIn3DScanner", answer);
         gui.setQuestion("BuiltIn3DScanner");
@@ -391,13 +388,16 @@ end
 rule "OpposedToHavingMakerBot"
     when
     	GuiPosition((question == "WantAffordability" && answer == "No" && previousAnswer == "Ease of Use")
-    	    || (question == "WantAffordability" && answer == "No" && previousAnswer == "Big Build Volume"))
+    	    || (question == "WantAffordability" && answer == "No" && previousAnswer == "Big Build Volume")
+    	    || (question == "StartingPoint" && answer == "Portability"))
     then
         String[] answers = {"Yes", "No"};
-        String answer = askQuestion(printerface, "Are you opposed to idea of having a MakerBot?", List.of(answers));
+        String answer = askQuestion(printerface, "Are you opposed to idea of having a MakerBot?", answers);
         GuiPosition gui = new GuiPosition();
+        String first = gui.getFirstAnswer();
         storePreviousState(gui, printerface, "OpposedToHavingMakerBot", answer);
         gui.setQuestion("OpposedToHavingMakerBot");
+        gui.setFirstAnswer(printerface.getFirstAnswer());
         gui.setAnswer(answer);
         printerface.log("inserting: [" + gui.getQuestion() + ", " + gui.getAnswer() + ", " +
                            gui.getPreviousQuestion() + ", " + gui.getPreviousAnswer() + "]");
@@ -406,7 +406,7 @@ end
 
 rule "MakerBotReplicator2Result"
     when
-    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "No")
+    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "No" && previousQuestion == "WantAffordability" && firstAnswer == "Ease of Use")
     then
        	Result decision = new Result();
 		decision.setDecision("MakerBot Replicator 2");
@@ -416,10 +416,10 @@ end
 
 rule "HavingCloneMakerBot"
     when
-    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "Yes" && previousQuestion == "WantAffordability")
+    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "Yes" && firstAnswer == "Ease of Use")
     then
         String[] answers = {"That's fine!", "No way!"};
-        String answer = askQuestion(printerface, "How about MakerBot clone?", List.of(answers));
+        String answer = askQuestion(printerface, "How about MakerBot clone?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface, "HavingCloneMakerBot", answer);
         gui.setQuestion("HavingCloneMakerBot");
@@ -444,7 +444,7 @@ rule "TripleExtrusion"
     	GuiPosition(question == "DualExtrusion" && answer == "Yes" && previousAnswer == "No way!")
     then
         String[] answers = {"Cool!", "Eh."};
-        String answer = askQuestion(printerface, "How does a triple extrusion sound?", List.of(answers));
+        String answer = askQuestion(printerface, "How does a triple extrusion sound?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface,"TripleExtrusion", answer);
         gui.setQuestion("TripleExtrusion");
@@ -464,22 +464,23 @@ rule "3DSystemsCubeProTrioResult"
 		insert(decision);
 end
 
-rule "LeapFrogCreatorXLResult"
+rule "LeapFrogCreatrXLResult"
     when
-    	GuiPosition(question == "BigVolume" && answer == "Yes" && previousAnswer == "Eh.")
+    	GuiPosition((question == "BigVolume" && answer == "Yes" && previousAnswer == "Eh.") ||
+    	            question == "OpposedToHavingMakerBot" && answer == "Yes" && firstAnswer == "Big Build Volume")
     then
        	Result decision = new Result();
-		decision.setDecision("LeapFrog Creator XL");
+		decision.setDecision("LeapFrog Creatr XL");
 		printerface.showDecision(decision.getDecision());
 		insert(decision);
 end
 
-rule "LeapFrogCreatorHSResult"
+rule "LeapFrogCreatrHSResult"
     when
     	GuiPosition(question == "BigVolume" && answer == "No" && previousAnswer == "Eh.")
     then
        	Result decision = new Result();
-		decision.setDecision("LeapFrog Creator HS");
+		decision.setDecision("LeapFrog Creatr HS");
 		printerface.showDecision(decision.getDecision());
 		insert(decision);
 end
@@ -489,7 +490,7 @@ rule "MakeYourPick"
     	GuiPosition(question == "DualExtrusion" && answer == "No" && previousAnswer == "No way!")
     then
         String[] answers = {"SeeMeCNC Orion Delta", "AirWolf HDX", "Leapfrog Creatr"};
-        String answer = askQuestion(printerface, "Make your pick. These three have different build volume and are priced respectively", List.of(answers));
+        String answer = askQuestion(printerface, "Make your pick. These three have different build volume and are priced respectively", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface, "MakeYourPick", answer);
         gui.setQuestion("MakeYourPick");
@@ -535,7 +536,7 @@ rule "BigBuildVolumeOrReallyBig"
     	    && previousAnswer == "Big Build Volume")
     then
         String[] answers = {"Big", "REALLY BIG"};
-        String answer = askQuestion(printerface, "Do you want big build volume or REALLY BIG build volume?", List.of(answers));
+        String answer = askQuestion(printerface, "Do you want big build volume or REALLY BIG build volume?", answers);
         GuiPosition gui = new GuiPosition();
         storePreviousState(gui, printerface, "BigBuildVolumeOrReallyBig", answer);
         gui.setQuestion("BigBuildVolumeOrReallyBig");
@@ -557,3 +558,116 @@ rule "RigidbotBigResult"
 		insert(decision);
 end
 
+rule "SeeMeCNCRostockMaxV2Result"
+    when
+    	GuiPosition(question == "DIYOrAssembled" && answer == "Kit" && previousAnswer == "REALLY BIG")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("SeeMeCNC Rostock MAX v2");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end
+
+rule "WanhaoDuplicator5Result"
+    when
+    	GuiPosition(question == "DIYOrAssembled" && answer == "Assembled" && previousAnswer == "REALLY BIG")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("Wanhao Duplicator 5");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end
+
+rule "MakerbotReplicatorZ18Result"
+    when
+    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "No" && firstAnswer == "Big Build Volume")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("Makerbot Replicator Z18");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end
+
+rule "MakerbotReplicatorMiniResult"
+    when
+    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "No" && previousAnswer == "Portability")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("Makerbot Replicator Mini");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end
+
+rule "LevelOfPortable"
+    when
+    	GuiPosition(question == "OpposedToHavingMakerBot" && answer == "Yes" && previousAnswer == "Portability")
+    then
+        String[] answers = {"Foldable and battery operable", "Lightweight and small"};
+        String answer = askQuestion(printerface, "What level of portable are we talking about", answers);
+        GuiPosition gui = new GuiPosition();
+        storePreviousState(gui, printerface, "LevelOfPortable", answer);
+        gui.setQuestion("LevelOfPortable");
+        gui.setAnswer(answer);
+        printerface.log("inserting: [" + gui.getQuestion() + ", " + gui.getAnswer() + ", " +
+                           gui.getPreviousQuestion() + ", " + gui.getPreviousAnswer() + "]");
+        insert(gui);
+end
+
+rule "PortabeeGoResult"
+    when
+    	GuiPosition(question == "LevelOfPortable" && answer == "Foldable and battery operable")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("Portabee GO");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end
+
+rule "PrintMaterials"
+    when
+    	GuiPosition(question == "LevelOfPortable" && answer == "Lightweight and small")
+    then
+        String[] answers = {"More materials", "Portability"};
+        String answer = askQuestion(printerface, "Would you rather have the ability to print more materials or have a more portable printer?", answers);
+        GuiPosition gui = new GuiPosition();
+        storePreviousState(gui, printerface, "PrintMaterials", answer);
+        gui.setQuestion("PrintMaterials");
+        gui.setAnswer(answer);
+        printerface.log("inserting: [" + gui.getQuestion() + ", " + gui.getAnswer() + ", " +
+                           gui.getPreviousQuestion() + ", " + gui.getPreviousAnswer() + "]");
+        insert(gui);
+end
+
+rule "DeezmakerBukitoResult"
+    when
+    	GuiPosition(question == "PrintMaterials" && answer == "More materials")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("Deezmaker Bukito");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end
+
+rule "PrintrbotSimpleMetalResult"
+    when
+    	GuiPosition(question == "PrintMaterials" && answer == "Portability")
+    then
+        printerface.log("previous question: " + printerface.getPreviousQuestion());
+        printerface.log("previous answer: " + printerface.getPreviousAnswer());
+       	Result decision = new Result();
+		decision.setDecision("Printrbot Simple Metal");
+		printerface.showDecision(decision.getDecision());
+		insert(decision);
+end

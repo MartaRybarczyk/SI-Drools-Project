@@ -8,7 +8,7 @@ public interface PrinterInterface {
 
     void showQuestion(String question);
 
-    void showOptions(List<String> options);
+    void showOptions(String[] options);
 
     void showDecision(String decision);
 

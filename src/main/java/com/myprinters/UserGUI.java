@@ -55,14 +55,14 @@ public class UserGUI extends JFrame implements PrinterInterface {
     }
 
     @Override
-    public void showOptions(List<String> options) {
+    public void showOptions(String[] options) {
         log("CurrentAnswers(" + String.join(",", options) + ")");
         showData(() -> {
-            if (!options.isEmpty()) {
-                answers.setLayout(new GridLayout(options.size(), 1));
-                for (int i = 0; i < options.size(); i++) {
+            if (options.length != 0) {
+                answers.setLayout(new GridLayout(options.length, 1));
+                for (int i = 0; i < options.length; i++) {
                     final int id = i;
-                    final JButton button = new JButton(options.get(id));
+                    final JButton button = new JButton(options[id]);
                     button.addActionListener(e -> answerId = id);
                     answers.add(button);
                 }
